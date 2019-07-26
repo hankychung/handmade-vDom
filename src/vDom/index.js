@@ -101,6 +101,9 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
 
       // 遍历旧属性，收集有修改的属性
       for (let k in oldAttrs) {
+        let oldA = typeof oldAttrs[k] === 'object' ? JSON.stringify(oldAttrs[k]) : oldAttrs[k],
+          newA = typeof newA[k] === 'object' ? JSON.stringify(newA[k]) : newA[k],
+        
         if (oldAttrs[k] !== newAttrs[k]) {
           diffAttrs[k] = newAttrs[k]
         }
@@ -142,7 +145,7 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
   }
 }
 
-export function startPatch(node, patches) {
+export function patch(node, patches) {
   walkToPatch(node, patches, 0)
 }
 
@@ -155,13 +158,15 @@ function walkToPatch(node, patches, index) {
   let childNodes = node.childNodes
   // 当前节点为被替换或者被移除的补丁类型时，不遍历其子节点
   if (!childNodes || patch.type === 'REMOVE' || patch.type === 'REPLACE') return
-  node.childNodes.forEach(child => {
-    walkToPatch(child, patches, ++index)
-  })
+  for (let i = 0; i < childNodes.length; i++) {
+    walkToPatch(childNodes[i], patches, index + 1)
+    if (patches[index].type === 'REMOVE') --i
+  }
 }
 
 function doPatch(node, patch) {
   switch (patch.type) {
     case 'REMOVE':
+      node.parentNode.removeChild(node)
   }
 }

@@ -1,4 +1,4 @@
-import { createEl, renderDom, getPatches, startPatch } from './vDom/index'
+import { createEl, renderDom, getPatches, patch } from './vDom/index'
 
 const vDom = createEl(
   'div',
@@ -43,7 +43,7 @@ const vDom2 = createEl(
     ]),
     createEl('div', {}, [
       createEl('input', { value: 'txt' }),
-      createEl('textarea', { value: 123 }),
+      // createEl('textarea', { value: 123 }),
       'input wrapper'
     ]),
     'change'
@@ -54,6 +54,7 @@ let dom = vDom.render()
 
 renderDom(document.getElementById('app'), dom)
 
-getPatches(vDom, vDom2)
+console.log(getPatches(vDom, vDom2))
+patch(vDom, getPatches(vDom, vDom2))
 
 setTimeout(() => {}, 1000)

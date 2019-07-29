@@ -68,14 +68,15 @@ export function getPatches(oldVDom, newVDom) {
   return patches
 }
 
-let walkIdx = 0
+let diffIdx = 0
 function walkDiffs(oldVDom, newVDom, patches, index) {
   let diffRes,
     walkDeep = true
   // 无新节点，删除操作
   if (newVDom === undefined) {
     diffRes = {
-      type: 'REMOVE'
+      type: 'REMOVE',
+      index
     }
     walkDeep = false
   }
@@ -144,16 +145,14 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
     patches[index] = diffRes
   }
 
-  console.log(index, diffRes)
-
   // 当前节点为被替换或者被移除的补丁类型时，不遍历其子节点
   if (walkDeep) {
     let childNodes = oldVDom.children,
       newChildNodes = newVDom.children ? newVDom.children : []
     childNodes &&
       childNodes.forEach((child, idx) => {
-        ++walkIdx
-        walkDiffs(child, newChildNodes[idx], patches, walkIdx)
+        ++diffIdx
+        walkDiffs(child, newChildNodes[idx], patches, diffIdx)
       })
   }
 }
@@ -164,11 +163,11 @@ export function patch(node, patches) {
 
 let patchIdx = 0
 function walkToPatch(node, patches, index) {
-  console.log(index, node, patches[index])
   let patch = patches[index]
   if (patch) {
     doPatch(node, patch)
   }
+  console.log(index, node, patch)
 
   let childNodes = node.childNodes
   // 当前节点为被替换或者被移除的补丁类型时，不遍历其子节点
@@ -179,16 +178,16 @@ function walkToPatch(node, patches, index) {
     return
   for (let i = 0; i < childNodes.length; i++) {
     ++patchIdx
+    let curPatch = patches[patchIdx] //当前补丁类型
     walkToPatch(childNodes[i], patches, patchIdx)
-    if (patches[index] && patches[index].type === 'REMOVE') --i
+    // 若当前节点是删除类型，遍历索引需减一，否则后面的（部分）节点将会不被遍历
+    if (curPatch && curPatch.type === 'REMOVE') --i
   }
 }
 
 function doPatch(node, patch) {
-  console.log(node, patch)
   switch (patch.type) {
     case 'REMOVE':
-      console.log(node)
       node.parentNode.removeChild(node)
   }
 }

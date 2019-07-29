@@ -42,8 +42,8 @@ const vDom2 = createEl(
       createEl('li', {}, ['li3'])
     ]),
     createEl('div', {}, [
-      createEl('input', { value: 'txt' }),
-      createEl('textarea', { value: 123 })
+      createEl('input', { value: 'txt' })
+      //createEl('textarea', { value: 123 })
       //'input wrapper'
     ])
     //'end of div'

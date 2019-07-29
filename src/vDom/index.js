@@ -62,12 +62,13 @@ export function renderDom(target, dom) {
 }
 
 export function getPatches(oldVDom, newVDom) {
-  console.log(oldVDom, newVDom)
+  //console.log(oldVDom, newVDom)
   let patches = {}
   walkDiffs(oldVDom, newVDom, patches, 0)
   return patches
 }
 
+let walkIdx = 0
 function walkDiffs(oldVDom, newVDom, patches, index) {
   let diffRes,
     walkDeep = true
@@ -101,10 +102,16 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
 
       // 遍历旧属性，收集有修改的属性
       for (let k in oldAttrs) {
-        let oldA = typeof oldAttrs[k] === 'object' ? JSON.stringify(oldAttrs[k]) : oldAttrs[k],
-          newA = typeof newA[k] === 'object' ? JSON.stringify(newA[k]) : newA[k],
-        
-        if (oldAttrs[k] !== newAttrs[k]) {
+        let oldA =
+            typeof oldAttrs[k] === 'object'
+              ? JSON.stringify(oldAttrs[k])
+              : oldAttrs[k],
+          newA =
+            typeof newAttrs[k] === 'object'
+              ? JSON.stringify(newAttrs[k])
+              : newAttrs[k]
+
+        if (oldA !== newA) {
           diffAttrs[k] = newAttrs[k]
         }
       }
@@ -116,9 +123,11 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
         }
       }
 
-      diffRes = {
-        type: 'MODIFY_ATTR',
-        diffAttrs
+      if (Object.keys(diffAttrs).length) {
+        diffRes = {
+          type: 'MODIFY_ATTR',
+          diffAttrs
+        }
       }
     }
     // 新节点与旧节点不是同一类型的节点，直接替换为新节点
@@ -130,18 +139,22 @@ function walkDiffs(oldVDom, newVDom, patches, index) {
       walkDeep = false
     }
   }
+
+  if (diffRes) {
+    patches[index] = diffRes
+  }
+
+  console.log(index, diffRes)
+
   // 当前节点为被替换或者被移除的补丁类型时，不遍历其子节点
   if (walkDeep) {
     let childNodes = oldVDom.children,
       newChildNodes = newVDom.children ? newVDom.children : []
     childNodes &&
       childNodes.forEach((child, idx) => {
-        walkDiffs(child, newChildNodes[idx], patches, ++index)
+        ++walkIdx
+        walkDiffs(child, newChildNodes[idx], patches, walkIdx)
       })
-  }
-
-  if (diffRes) {
-    patches[index] = diffRes
   }
 }
 
@@ -149,7 +162,9 @@ export function patch(node, patches) {
   walkToPatch(node, patches, 0)
 }
 
+let patchIdx = 0
 function walkToPatch(node, patches, index) {
+  console.log(index, node, patches[index])
   let patch = patches[index]
   if (patch) {
     doPatch(node, patch)
@@ -157,16 +172,23 @@ function walkToPatch(node, patches, index) {
 
   let childNodes = node.childNodes
   // 当前节点为被替换或者被移除的补丁类型时，不遍历其子节点
-  if (!childNodes || patch.type === 'REMOVE' || patch.type === 'REPLACE') return
+  if (
+    !childNodes ||
+    (patch && (patch.type === 'REMOVE' || patch.type === 'REPLACE'))
+  )
+    return
   for (let i = 0; i < childNodes.length; i++) {
-    walkToPatch(childNodes[i], patches, index + 1)
-    if (patches[index].type === 'REMOVE') --i
+    ++patchIdx
+    walkToPatch(childNodes[i], patches, patchIdx)
+    if (patches[index] && patches[index].type === 'REMOVE') --i
   }
 }
 
 function doPatch(node, patch) {
+  console.log(node, patch)
   switch (patch.type) {
     case 'REMOVE':
+      console.log(node)
       node.parentNode.removeChild(node)
   }
 }

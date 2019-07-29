@@ -43,10 +43,10 @@ const vDom2 = createEl(
     ]),
     createEl('div', {}, [
       createEl('input', { value: 'txt' }),
-      // createEl('textarea', { value: 123 }),
-      'input wrapper'
-    ]),
-    'change'
+      createEl('textarea', { value: 123 })
+      //'input wrapper'
+    ])
+    //'end of div'
   ]
 )
 
@@ -54,7 +54,6 @@ let dom = vDom.render()
 
 renderDom(document.getElementById('app'), dom)
 
-console.log(getPatches(vDom, vDom2))
-patch(vDom, getPatches(vDom, vDom2))
+patch(dom, getPatches(vDom, vDom2))
 
 setTimeout(() => {}, 1000)
